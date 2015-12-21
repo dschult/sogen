@@ -389,7 +389,7 @@ void print_cell_columns (input_params& ip, sim_data& sd, con_levels &cl, char* f
 			for (; col < ip.num_colls_print; col++) {
 				int cur_col = WRAP(first_active_start + col, sd.width_total);
 				for (int line = 0; line < sd.height; line++) {
-					time_point[line * ip.num_colls_print + col] = cl.cons[CMH1][time][line * sd.width_total + cur_col];
+					time_point[line * ip.num_colls_print + col] = cl.cons[CMMESPA][time][line * sd.width_total + cur_col];
 				}
 			
 				if (cur_col == cl.active_start_record[time]) {
@@ -425,7 +425,7 @@ void print_cell_columns (input_params& ip, sim_data& sd, con_levels &cl, char* f
 				}
 				
 				for (int line = 0; line < sd.height; line++) {
-					time_point[line * ip.num_colls_print + (ip.num_colls_print - col - 1)] = cl.cons[CMH1][time][line * sd.width_total + cur_col];
+					time_point[line * ip.num_colls_print + (ip.num_colls_print - col - 1)] = cl.cons[CMMESPA][time][line * sd.width_total + cur_col];
 				}
 			}
 			

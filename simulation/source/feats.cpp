@@ -90,7 +90,7 @@ int get_peaks_and_troughs1 (sim_data& sd, con_levels& cl, int actual_cell, int t
 
 int get_peaks_and_troughs2 (sim_data& sd, con_levels& cl, int actual_cell, int time_start, growin_array& crit_points, growin_array& type, growin_array& position, int mr, double* mh1_comp, double* mespa_comp, double* mespb_comp) {
 	/*
-	record the concentration value of mh1, mespa, mespb in the time specified in order to calculate the complementary expression score of mespa and mespb. 
+	151221: record the concentration value of mh1, mespa, mespb in the time specified in order to calculate the complementary expression score of mespa and mespb. 
 	*/
 	int num_points = 0;
 	int col = actual_cell % sd.width_total;
@@ -100,9 +100,9 @@ int get_peaks_and_troughs2 (sim_data& sd, con_levels& cl, int actual_cell, int t
 	for (int j = time_start + 1; j < sd.time_end - 1 && cl.cons[BIRTH][j][actual_cell] == cl.cons[BIRTH][j - 1][actual_cell] && cl.cons[BIRTH][j][actual_cell] == cl.cons[BIRTH][j + 1][actual_cell]; j++) {
 		// calculate position in the PSM of the cell
 		
-		mh1_comp[compl_count]=cl.cons[CMH1][j][actual_cell];                 //record concentration value of mh1
-		mespa_comp[compl_count]=cl.cons[CMMESPA][j][actual_cell];           //record concentration value of mespa
-		mespb_comp[compl_count]=cl.cons[CMMESPB][j][actual_cell];             //record concentration value of mespb
+		mh1_comp[compl_count]=cl.cons[CMH1][j][actual_cell];                 //record concentration value of mh1 151221
+		mespa_comp[compl_count]=cl.cons[CMMESPA][j][actual_cell];           //record concentration value of mespa 151221
+		mespb_comp[compl_count]=cl.cons[CMMESPB][j][actual_cell];             //record concentration value of mespb 151221
 		compl_count++;
 		
 		int pos = 0;
@@ -162,13 +162,13 @@ double test_complementary (sim_data& sd, con_levels& cl, int time, int con1, int
         avg_row_con2[y] /= sd.height;
 	}
 
-	return pearson_correlation(avg_row_con1, avg_row_con2, 0.5*sd.width_total, sd.width_total);  //JY WT.10 rounding?
+	return pearson_correlation(avg_row_con1, avg_row_con2, 0.6*sd.width_total, sd.width_total);  //JY WT.10 rounding?
 }
 
-double test_compl(sim_data& sd, double* con1, double* con2) {  // calculate the complementary expression score of mespa and mespb
+double test_compl(sim_data& sd, double* con1, double* con2) {  // 151221: calculate the complementary expression score of mespa and mespb
 	//int count=sd.width_total*sd.steps_split - 2;
 	
-	return pearson_correlation(con1, con2, (int)(0.5*(sd.width_total*sd.steps_split - 2)),sd.width_total*sd.steps_split - 2);   
+	return pearson_correlation(con1, con2, (int)(0.6*(sd.width_total*sd.steps_split - 2)),sd.width_total*sd.steps_split - 2);   
 }
 
 
@@ -189,11 +189,11 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 	sprintf(str_set_num, "%d", set_num);
 	
 	int num_cell = (end_line - start_line) * (end_col - start_col);
-	double mh1_comp[sd.width_total*sd.steps_split - 2];
-	double mespa_comp[sd.width_total*sd.steps_split - 2];
-	double mespb_comp[sd.width_total*sd.steps_split - 2];
-	double comp_score_a = 0;
-	double comp_score_b = 0;
+	double mh1_comp[sd.width_total*sd.steps_split - 2];   //151221: structure to store concentration value for mh1, used in get_peaks_and_troughs2 
+	double mespa_comp[sd.width_total*sd.steps_split - 2]; //151221: structure to store concentration value for mespa, used in get_peaks_and_troughs2
+	double mespb_comp[sd.width_total*sd.steps_split - 2]; //151221: structure to store concentration value for mespb, used in get_peaks_and_troughs2
+	double comp_score_a = 0; //151221: complementary score for mespa
+	double comp_score_b = 0; //151221: complementary score for mespa
 	memset(mh1_comp, 0, sizeof(double) * (sd.width_total*sd.steps_split - 2));
 	memset(mespa_comp, 0, sizeof(double) * (sd.width_total*sd.steps_split - 2));
 	memset(mespb_comp, 0, sizeof(double) * (sd.width_total*sd.steps_split - 2));
@@ -237,7 +237,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				    num_points = get_peaks_and_troughs1(sd, cl, cell, time_start, crit_points, type, position, mr);
                 } else {
 					
-					num_points = get_peaks_and_troughs2(sd, cl, cell, time_start, crit_points, type, position, mr, mh1_comp, mespa_comp, mespb_comp);  //get_peaks_and_troughs2 records the concentration value of mh1, mespa and mespb and store them in mh1_comp, mespa_comp, mespb_comp
+					num_points = get_peaks_and_troughs2(sd, cl, cell, time_start, crit_points, type, position, mr, mh1_comp, mespa_comp, mespb_comp);  // 151221: get_peaks_and_troughs2 records the concentration value of mh1, mespa and mespb and store them in mh1_comp, mespa_comp, mespb_comp
 					comp_score_a+=test_compl(sd, mh1_comp, mespa_comp);
 					comp_score_b+=test_compl(sd, mh1_comp, mespb_comp);
 				} 
@@ -349,7 +349,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				}
 
                 // Updating mutant data
-                for (int j = 0; j < pers; j++) {                                                    // may not be used any more
+                for (int j = 0; j < pers; j++) {                                                    // 151221: may be unused
 					if (per_time[j] >= anterior_time(sd, md.induction)) {
                     	double half_hour_index = 0.5 * (((int)(per_time[j] - anterior_time(sd, md.induction)) * sd.big_gran / 3000) + 1);
                    		if (per_pos[j] < sd.width_initial) {
@@ -388,17 +388,17 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
         md.feat.period_ant[index] = period_avg;
 		md.feat.amplitude_ant[index] = amp_avg;  //JY WT.3.  take average of all amplitude for all cell
 		if (md.index == MUTANT_WILDTYPE && mr == CMH1) {
-			int threshold = 0.7 * (end_line - start_line) * (end_col - start_col);
+			int threshold = 0.7 * (end_line - start_line) * (end_col - start_col); // 151221: originally 80%, now changed to 70%
 			md.conds_passed[SEC_ANT][0] = (num_cells_passed >= threshold);
 		}
 		
-		if (md.index == MUTANT_WILDTYPE) {                                           //calculate oscillation features for wildtype, including posterior amplitude, anterior amplitude and syncrony score for different species
+		if (md.index == MUTANT_WILDTYPE) {                              //151221: calculate oscillation features for wildtype, including posterior amplitude, anterior amplitude and syncrony score for different species
 			
 			int time_half = anterior_time(sd,(600+30)/sd.step_size);         //half hours after induction, 10 snapshot in 30 minutes
 			int time_half_end = anterior_time(sd,(600+60)/sd.step_size);
 			for (;time_half<time_half_end; time_half+=(3/sd.step_size)){
 				md.feat.amplitude_post_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0, sd.width_initial);
-				md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.5*sd.width_total, sd.width_total);
+				md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.6*sd.width_total, sd.width_total);
 				md.feat.amplitude_post[index] +=  avg_amp(sd,cl,index+1,time_half, 0, sd.width_initial);
 				//md.feat.sync_score_post[index]+=post_sync(sd,cl, index + 1, time_half);
 				md.feat.sync_score_ant[index]+= ant_sync(sd, cl, index + 1, time_half);
@@ -411,7 +411,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				int time_three_end = anterior_time(sd, (600+210)/sd.step_size);
 				for (;time_three<time_three_end; time_three+=(3/sd.step_size)){
 					md.feat.amplitude_post_time[index][3]+= avg_amp(sd,cl,index+1,time_three, 0, sd.width_total);
-					//md.feat.amplitude_ant_time[index][3]+=avg_amp(sd,cl,index+1,time_three, 0.5*sd.width_total, sd.width_total);
+					//md.feat.amplitude_ant_time[index][3]+=avg_amp(sd,cl,index+1,time_three, 0.6*sd.width_total, sd.width_total);
 				}
 
 			}
@@ -421,20 +421,20 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				int time_one_end = anterior_time(sd, (600+90)/sd.step_size);
 				for (;time_one<time_one_end; time_one+=(3/sd.step_size)){
 					
-					md.feat.amplitude_ant_time[index][1]+=avg_amp(sd,cl,index+1,time_one, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][1]+=avg_amp(sd,cl,index+1,time_one, 0.6*sd.width_total, sd.width_total);
 				}
 
 				int time_two = anterior_time(sd, (600+120)/sd.step_size);            //two hours after induction, 10 snapshot in 30 minutes
 				int time_two_end = anterior_time(sd, (600+150)/sd.step_size);            
 				for (;time_two<time_two_end; time_two+=(3/sd.step_size)){
 					
-					md.feat.amplitude_ant_time[index][2]+= avg_amp(sd,cl,index+1,time_two, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][2]+= avg_amp(sd,cl,index+1,time_two, 0.6*sd.width_total, sd.width_total);
 				}
 			}
 
 		}
 
-		if (md.index==MUTANT_DELTA){  //calculate oscillation features for delta mutant, including posterior amplitude, anterior amplitude and syncrony score for different species
+		if (md.index==MUTANT_DELTA){  //151221: calculate oscillation features for delta mutant, including posterior amplitude, anterior amplitude and syncrony score for different species
 						
 
 
@@ -447,7 +447,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 					md.feat.sync_score_ant[3]+=ant_sync(sd, cl, 3 + 1, time_half);
 					//md.feat.sync_score_post[0]+=post_sync(sd,cl, 0 + 1, time_half);
 					md.feat.amplitude_post[0] +=  avg_amp(sd,cl,0+1,time_half, 0, sd.width_initial);
-					md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.6*sd.width_total, sd.width_total);
 				}
 				
 				
@@ -475,7 +475,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				int time_half_end = anterior_time(sd,(600+60)/sd.step_size);
 				for (;time_half<time_half_end; time_half+=(3/sd.step_size)){
 					//cout<<md.feat.amplitude_ant_time[0][0.5]<<endl;
-					md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.6*sd.width_total, sd.width_total);
 				}
 			}
 
@@ -496,7 +496,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				int time_half_end = anterior_time(sd,(600+60)/sd.step_size);
 				for (;time_half<time_half_end; time_half+=(3/sd.step_size)){
 					md.feat.amplitude_post_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0, sd.width_initial);
-					md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][0.5]+=avg_amp(sd,cl,index+1,time_half, 0.6*sd.width_total, sd.width_total);
 				}
 			}
 		}
@@ -508,7 +508,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				for (;time_three<time_three_end; time_three+=(3/sd.step_size)){
 					md.feat.amplitude_post_time[index][3]+=avg_amp(sd,cl,index+1,time_three, 0, sd.width_total);
 					md.feat.sync_time[index][3]+=ant_sync(sd, cl, index + 1, time_three);
-					//md.feat.amplitude_ant_time[index][3]+=avg_amp(sd,cl,index+1,time_three, 0.5*sd.width_total, sd.width_total);
+					//md.feat.amplitude_ant_time[index][3]+=avg_amp(sd,cl,index+1,time_three, 0.6*sd.width_total, sd.width_total);
 				}
 
 				
@@ -520,7 +520,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				int time_two_end = anterior_time(sd, (600+150)/sd.step_size);
 				for (;time_two<time_two_end; time_two+=(3/sd.step_size)){
 					
-					md.feat.amplitude_ant_time[index][2]+=avg_amp(sd,cl,index+1,time_two, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][2]+=avg_amp(sd,cl,index+1,time_two, 0.6*sd.width_total, sd.width_total);
 				}
 			}
 
@@ -540,7 +540,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				int time_one_end = anterior_time(sd, (600+90)/sd.step_size);
 				for (;time_one<time_one_end; time_one+=(3/sd.step_size)){
 					
-					md.feat.amplitude_ant_time[index][1]+=avg_amp(sd,cl,index+1,time_one, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][1]+=avg_amp(sd,cl,index+1,time_one, 0.6*sd.width_total, sd.width_total);
 				}
 			}
 		}
@@ -551,7 +551,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 				int time_one_end = anterior_time(sd, (600+90)/sd.step_size);
 				for (;time_one<time_one_end; time_one+=(3/sd.step_size)){
 					
-					md.feat.amplitude_ant_time[index][1]+=avg_amp(sd,cl,index+1,time_one, 0.5*sd.width_total, sd.width_total);
+					md.feat.amplitude_ant_time[index][1]+=avg_amp(sd,cl,index+1,time_one, 0.6*sd.width_total, sd.width_total);
 				}
 			}
 		}
@@ -588,7 +588,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 			}
 			features_files[SYNC].close();
 		}
-		if (index == IMMESPA) { // this is only done for her1
+		if (index == IMMESPA) { //151221: complementary score for mespa and mespb
 			// for complementary mesp expression take 6 snapshots and average comp score
 			//double num = 0;
 			
@@ -611,7 +611,7 @@ void osc_features_ant (sim_data& sd, input_params& ip, features& wtfeat, char* f
 	mfree(str_set_num);
 }
 
-void osc_features_post (sim_data& sd, input_params& ip, con_levels& cl, features& feat, features& wtfeat, char* filename_feats, int start, int end, int set_num) {   // we are only using the this for the peaktotrough condition in wildtype mutant
+void osc_features_post (sim_data& sd, input_params& ip, con_levels& cl, features& feat, features& wtfeat, char* filename_feats, int start, int end, int set_num) {   //151221:  we are only using the this for the peaktotrough condition in wildtype mutant. maybe you can delete some unnecessary lines
 	/*
 	 Calculates the oscillation features: period, amplitude, and peak to trough ratio for a set of concentration levels.
 	 The values are calculated using the last peak and trough of the oscillations, since the amplitude of the first few oscillations can be slightly unstable.
@@ -758,7 +758,7 @@ void osc_features_post (sim_data& sd, input_params& ip, con_levels& cl, features
 	mfree(str_set_num);
 }
 
-double avg_amp (sim_data& sd, con_levels& cl, int con, int time, int start , int end){              //calculate the average concentration value, and use it as amplitude
+double avg_amp (sim_data& sd, con_levels& cl, int con, int time, int start , int end){              //151221: calculate the average concentration value, and use it as amplitude
 	int pos_start = cl.active_start_record[time];
 	int pos_cur = 0;
 	double conslevel = 0;
@@ -777,7 +777,7 @@ double avg_amp (sim_data& sd, con_levels& cl, int con, int time, int start , int
 	return conslevel / (sd.height*(end-start));
 }
 
-double ant_sync (sim_data& sd, con_levels& cl, int con, int time) {  // calculate syncronization score
+double ant_sync (sim_data& sd, con_levels& cl, int con, int time) {  //151221: calculate syncronization score
 	if (sd.height == 1) {
 		return 1; // for 1d arrays there is no synchronization between rows 
 	}
@@ -814,7 +814,7 @@ double ant_sync (sim_data& sd, con_levels& cl, int con, int time) {  // calculat
 		}
 		if (con == 3 || con ==4){
 			
-			pearson_sum += pearson_correlation(first_row, cur_row, (int)(0.5*sd.width_total), sd.width_total );   //mespa and mespb only express in anterior
+			pearson_sum += pearson_correlation(first_row, cur_row, (int)(0.6*sd.width_total), sd.width_total );   //mespa and mespb only express in anterior
 		} else {
 			
 			pearson_sum += pearson_correlation(first_row, cur_row, 0, sd.width_total);
@@ -866,7 +866,7 @@ void plot_ant_sync (sim_data& sd, con_levels& cl, int time_start, ofstream* file
 }
 
 
-double post_sync (sim_data& sd, con_levels& cl, int con, int start, int end) {  // not used
+double post_sync (sim_data& sd, con_levels& cl, int con, int start, int end) {  //151221: not used
 	double comp_cell[end - start + 1];
 	double cur_cell[end - start + 1];
 	
@@ -928,7 +928,7 @@ double pearson_correlation (double* x, double* y, int start, int end) {
 	}
 }
 
-int wave_testing (sim_data& sd, con_levels& cl, mutant_data& md, int time, int con, int active_start) { //JY WT.4.5.6.7
+int wave_testing (sim_data& sd, con_levels& cl, mutant_data& md, int time, int con, int active_start) { //JY WT.4.5.6.7 151221: counting number of waves
 	// average the rows to create one array
 	double conc[sd.width_total];
 	memset(conc, 0, sizeof(double) * sd.width_total);
@@ -999,7 +999,7 @@ int wave_testing (sim_data& sd, con_levels& cl, mutant_data& md, int time, int c
 }
 
 
-int wave_testing_her1 (sim_data& sd, con_levels& cl, mutant_data& md, int time, int active_start) { // counting number of waves of her1 expression
+int wave_testing_her1 (sim_data& sd, con_levels& cl, mutant_data& md, int time, int active_start) { //151221: counting number of waves of her1 expression for her1 mutant, notused
 	// average the rows to create one array
 	double conc[sd.width_total];
 	memset(conc, 0, sizeof(double) * sd.width_total);
@@ -1061,7 +1061,7 @@ int wave_testing_her1 (sim_data& sd, con_levels& cl, mutant_data& md, int time, 
 	return cur_score;
 }
 
-void wave_testing_mesp (sim_data& sd, con_levels& cl, mutant_data& md, int time, int active_start) { //counting the number of waves of mesp gene expression
+void wave_testing_mesp (sim_data& sd, con_levels& cl, mutant_data& md, int time, int active_start) { //151221: counting the number of waves of mesp gene expression
 	// average the rows to create one array
 	double conc[sd.width_total];
 	memset(conc, 0, sizeof(double) * sd.width_total);

@@ -898,6 +898,8 @@ ofstream* create_scores_file (input_params& ip, mutant_data mds[]) {
 	returns: the array of all mutant data
 	notes:
 	todo:
+
+	20151221: commented out unused mutant initialization.
 */
 mutant_data* create_mutant_data (sim_data& sd, input_params& ip) {
 	mutant_data* mds = new mutant_data[sd.num_active_mutants];

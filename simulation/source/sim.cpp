@@ -269,10 +269,12 @@ inline void store_original_rates (rates& rs, mutant_data& md, double orig_rates[
 	returns: nothing
 	notes:
 	todo:
+
+	151221: For DAPT Mutant, knockout after induction
 */
 inline void knockout (rates& rs, mutant_data& md, bool induction) {
 	for (int i = 0; i < md.num_knockouts; i++) {
-		if (!(md.index==MUTANT_DAPT && induction == 0)){
+		if (!(md.index==MUTANT_DAPT && induction == 0)){               
 			rs.rates_base[md.knockouts[i]] = 0;
 		} 
 	}
@@ -371,7 +373,7 @@ double simulate_mutant (int set_num, input_params& ip, sim_data& sd, rates& rs, 
 				if (md.index == MUTANT_WILDTYPE){
 					wave_score = wave_testing(sd, cl, md, time, CMH1, sd.active_start);
 				} else {
-					wave_score = wave_testing_her1(sd, cl, md, time, sd.active_start);
+					wave_score = wave_testing_her1(sd, cl, md, time, sd.active_start);  // unused 151221
 				}
 			}
 			score += wave_score;
@@ -417,7 +419,7 @@ bool model (sim_data& sd, rates& rs, con_levels& cl, con_levels& baby_cl, mutant
 		
 		if (!past_induction && !past_recovery && (j  > anterior_time(sd,md.induction))) {
 			knockout(rs, md, 1); //knock down rates after the induction point
-			perturb_rates_all(rs);
+			perturb_rates_all(rs); //This is used for knockout the rate in the existing cells, may need modification
 			past_induction = true;
 		}
 		if (past_induction && (j + sd.steps_til_growth > md.recovery)) {
@@ -687,6 +689,8 @@ void update_rates (rates& rs, int active_start) {
 	notes:
 		Every dimerizing gene must be added to every other dimerizing gene's section in this function.
 	todo:
+
+	151221: Added prtein synthesis for mespa and mespb
 */
 void protein_synthesis (sim_data& sd, double** rs, con_levels& cl, st_context& stc, int old_cells_protein[]) {
 	double dimer_effects[NUM_HER_INDICES] = {0}; // Heterodimer calculations
@@ -825,6 +829,8 @@ inline void con_protein_delta (cp_args& a, cpd_indices i) {
 	returns: nothing
 	notes:
 	todo:
+
+	151221: added dimerization for mespamespa, mespamespb, mespbmespb
 */
 void dimer_proteins (sim_data& sd, double** rs, con_levels& cl, st_context& stc) {
 	cd_args cda(sd, rs, cl, stc); // WRAPper for repeatedly used structs
@@ -865,6 +871,8 @@ void dimer_proteins (sim_data& sd, double** rs, con_levels& cl, st_context& stc)
 	notes:
 	todo:
 		TODO consolidate these parameters
+
+	151221: pay attention to the index for mesp genes
 */
 inline void con_dimer (cd_args& a, int con, int offset, cd_indices i) {
 	double** r = a.rs;
@@ -898,6 +906,8 @@ inline void con_dimer (cd_args& a, int con, int offset, cd_indices i) {
 	returns: nothing
 	notes:
 	todo:
+
+	151221: Added mRNA transcription for meps genes, pay attention to index of mesp genes
 */
 void mRNA_synthesis (sim_data& sd, double** rs, con_levels& cl, st_context& stc, int old_cells_mrna[], mutant_data& md, bool past_induction, bool past_recovery) {
 	// Translate delays from minutes to time steps
@@ -1029,7 +1039,7 @@ inline double transcription (double** rs, con_levels& cl, int time, int cell, do
 	return ms * (oe + (1 + tdelta) / (1 + tdelta + SQUARE(th1h1) + SQUARE(th7h13) + SQUARE(tmespamespa) + SQUARE(tmespamespb) + SQUARE(tmespbmespb)));
 }
 
-/* transcription_mespa calculates mRNA transcription for mespa, taking into account the effects of dimer repression
+/* 151221: transcription_mespa calculates mRNA transcription for mespa, taking into account the effects of dimer repression
 	parameters:
 		rs: the active rates
 		cl: the concentration levels for simulating
@@ -1057,7 +1067,7 @@ inline double transcription_mespa (double** rs, con_levels& cl, int time, int ce
 	return ms * (oe + (tdelta) / (tdelta + rs[NS1][cell] * SQUARE(th1h1) + SQUARE(th7h13) + SQUARE(tmespbmespb)));
 }
 
-/* transcription_mespb calculates mRNA transcription for mespb, taking into account the effects of dimer repression
+/* 151221: transcription_mespb calculates mRNA transcription for mespb, taking into account the effects of dimer repression
 	parameters:
 		rs: the active rates
 		cl: the concentration levels for simulating
