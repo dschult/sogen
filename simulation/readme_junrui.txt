@@ -209,7 +209,7 @@ things to know: make sure you have required software packages, such as scipy, ff
 
 4.1 run sres on cluster:
 
-Submit the job script by using command "qsub sres2.run"
+Create a new job scrpt on the cluster:
 
 #PBS -N sres_15_one_mutant
 #PBS -l nodes=1:ppn=10
@@ -224,6 +224,8 @@ cd $PBS_O_WORKDIR
 
 mpirun -np 10 ./sres -r fguess.ranges -g 1200 -p 100 -P 15 -a -x 50 -w 10 -y 4 -M 1 -V 600 -Y 600 -Z 600 -Q 600 -K 600 -r ../simulation/gradient1.txt -u ../simulation/perturb.txt > output2.txt
 
+Submit the job script by using command "qsub sres2.run"
+
 
 To see the output, use the command "cat output2.txt" or "vim output2.txt".
 
@@ -231,7 +233,7 @@ To see the output, use the command "cat output2.txt" or "vim output2.txt".
 
 4.2 Create oscillation information.
 
-Store some good parameter sets in a params file "set.params".
+Store some good parameter sets from "output2.txt" in a params file "set.params".
 
 Modify structs.cpp and io.cpp so that concentration level mRNA of her1 will be printed.
 
